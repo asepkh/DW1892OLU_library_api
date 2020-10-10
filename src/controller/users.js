@@ -1,30 +1,101 @@
 const { Users } = require("../../models");
-const excluded = {
-  attributes: {
-    exclude: ["createdAt", "updatedAt"],
-  },
-};
+const bcrypt = require("bcrypt");
 
-exports.get = async (req, res) => {
+exports.getuser = async (req, res) => {
   try {
     const id = req.params.id;
-    !id
-      ? await Users.findAll(excluded).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        })
-      : await Users.findOne({
-          where: {
-            id,
-          },
-        }).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        });
+    let userData;
+
+    if (id) {
+      userData = await Users.findOne({
+        where: {
+          id,
+        },
+      });
+    } else {
+      userData = await Users.findAll();
+    }
+
+    if (userData) {
+      res.send({
+        message: "GET user data successfully",
+        data: userData,
+      });
+    } else {
+      res.send({
+        message: "GET user data failed",
+      });
+    }
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).send({
+      error: {
+        message: "Server ERROR",
+      },
+    });
+  }
+};
+
+exports.signin = async (req, res) => {
+  try {
+    const payload = req.body;
+    const userData = await Users.findOne({
+      where: {
+        email: payload.email,
+      },
+    });
+
+    const isLogin = bcrypt.compareSync(payload.password, userData.password);
+    console.log(isLogin);
+    if (userData && isLogin) {
+      res.send({
+        message: "Login successfully",
+        data: {
+          email: userData.email,
+          password: userData.password,
+        },
+      });
+    } else {
+      res.send({
+        message: "Login Failed",
+      });
+    }
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).send({
+      error: {
+        message: "Server ERROR",
+      },
+    });
+  }
+};
+
+exports.signup = async (req, res) => {
+  try {
+    let payload = req.body;
+    const hashPassword = bcrypt.hashSync(
+      payload.password,
+      bcrypt.genSaltSync(10)
+    );
+    payload.password = hashPassword;
+
+    const register = await Users.create(payload);
+
+    if (register) {
+      res.send({
+        message: "Signup successfully",
+        data: {
+          email: payload.email,
+          password: payload.password,
+        },
+      });
+    } else {
+      res.send({
+        message: "Signup failed",
+      });
+    }
   } catch (err) {
     console.log(err);
 
@@ -39,44 +110,22 @@ exports.get = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const id = req.params.id;
-    await Users.destroy({
+    const deleted = await Users.destroy({
       where: {
         id,
       },
-    }).then(function (data) {
+    });
+
+    if (deleted) {
       res.send({
-        message: "success",
+        message: `Delete Success...`,
         id,
       });
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).send({
-      error: {
-        message: "Server ERROR",
-      },
-    });
-  }
-};
-
-exports.patch = async (req, res) => {
-  try {
-    const id = req.params.id;
-    let updated = req.body;
-    await Users.update(updated, {
-      where: {
-        id,
-      },
-    }).then(function () {
+    } else {
       res.send({
-        message: "success",
-        data: {
-          id,
-          updated,
-        },
+        message: `Delete failed...`,
       });
-    });
+    }
   } catch (err) {
     console.log(err);
 

@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Books extends Model {
     /**
@@ -13,31 +11,32 @@ module.exports = (sequelize, DataTypes) => {
       Books.belongsTo(models.Users, {
         as: "author",
         foreignKey: {
-          name: "userId",
-          onDelete: "CASCADE",
+          name: "authorId",
         },
       });
-      Books.belongsTo(models.Cats, {
+      Books.belongsTo(models.Category, {
         as: "category",
         foreignKey: {
-          name: "catId",
-          onDelete: "CASCADE",
+          name: "categoryId",
         },
       });
     }
-  };
-  Books.init({
-    title: DataTypes.STRING,
-    publication: DataTypes.STRING,
-    userId: DataTypes.INTEGER,
-    catId: DataTypes.INTEGER,
-    pages: DataTypes.INTEGER,
-    isbn: DataTypes.STRING,
-    aboutBook: DataTypes.STRING,
-    status: DataTypes.ENUM("Waiting to be verified", "Approved", "Canceled"),
-  }, {
-    sequelize,
-    modelName: 'Books',
-  });
+  }
+  Books.init(
+    {
+      title: DataTypes.STRING,
+      publication: DataTypes.DATE,
+      categoryId: DataTypes.INTEGER,
+      authorId: DataTypes.INTEGER,
+      pages: DataTypes.INTEGER,
+      isbn: DataTypes.STRING,
+      aboutBook: DataTypes.TEXT,
+      status: DataTypes.ENUM("Waiting to be verified", "Approved", "Canceled"),
+    },
+    {
+      sequelize,
+      modelName: "Books",
+    }
+  );
   return Books;
 };
