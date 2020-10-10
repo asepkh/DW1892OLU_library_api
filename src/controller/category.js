@@ -1,4 +1,4 @@
-const { Users } = require("../../models");
+const { Cats } = require("../../models");
 const excluded = {
   attributes: {
     exclude: ["createdAt", "updatedAt"],
@@ -9,17 +9,20 @@ exports.get = async (req, res) => {
   try {
     const id = req.params.id;
     !id
-      ? await Users.findAll(excluded).then(function (data) {
+      ? await Cats.findAll(excluded).then(function (data) {
           res.send({
             message: "success",
             data,
           });
         })
-      : await Users.findOne({
-          where: {
-            id,
+      : await Cats.findOne(
+          {
+            where: {
+              id,
+            },
           },
-        }).then(function (data) {
+          excluded
+        ).then(function (data) {
           res.send({
             message: "success",
             data,
@@ -36,10 +39,30 @@ exports.get = async (req, res) => {
   }
 };
 
+exports.add = async (req, res) => {
+  try {
+    let payload = req.body;
+    await Cats.create(payload).then(function (data) {
+      res.send({
+        message: "success",
+        data,
+      });
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).send({
+      error: {
+        message: "Server ERROR",
+      },
+    });
+  }
+};
+
 exports.delete = async (req, res) => {
   try {
     const id = req.params.id;
-    await Users.destroy({
+    await Cats.destroy({
       where: {
         id,
       },
@@ -64,16 +87,16 @@ exports.patch = async (req, res) => {
   try {
     const id = req.params.id;
     let updated = req.body;
-    await Users.update(updated, {
+    await Cats.update(updated, {
       where: {
         id,
       },
-    }).then(function () {
+    }).then(() => {
       res.send({
         message: "success",
         data: {
           id,
-          updated,
+          category: updated.name,
         },
       });
     });

@@ -1,5 +1,6 @@
 //import express module
 const express = require("express");
+require('dotenv').config()
 
 //use express in app variable
 const app = express();
@@ -7,7 +8,6 @@ const app = express();
 const router = require("./src/routes/router");
 
 app.use(express.json());
-
 app.use("/api/v1/", router);
 
 //define the server port
