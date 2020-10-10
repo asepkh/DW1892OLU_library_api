@@ -2,16 +2,20 @@
   "name": "express-basic",
   "version": "1.0.0",
   "description": "Belajar ExpressJS",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "nodemon server.js"
   },
   "author": "Asep Khairul Anam",
   "license": "ISC",
   "dependencies": {
+    "@hapi/joi": "^17.1.1",
     "bcrypt": "^5.0.0",
+    "dotenv": "^8.2.0",
     "express": "4.17.1",
     "express-group-routes": "^1.1.0",
+    "joi": "^17.2.1",
+    "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.2.5",
     "sequelize": "^6.3.5"
   },
