@@ -8,26 +8,22 @@ const excluded = {
 exports.get = async (req, res) => {
   try {
     const id = req.params.id;
+    let data = null;
     !id
-      ? await Cats.findAll(excluded).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        })
-      : await Cats.findOne(
-          {
-            where: {
-              id,
-            },
+      ? data = await Cats.findAll(excluded)
+      : data = await Cats.findOne(
+        {
+          where: {
+            id,
           },
-          excluded
-        ).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        });
+        },
+        excluded
+      );
+
+    res.send({
+      message: "success",
+      data,
+    });
   } catch (err) {
     console.log(err);
 
@@ -42,11 +38,11 @@ exports.get = async (req, res) => {
 exports.add = async (req, res) => {
   try {
     let payload = req.body;
-    await Cats.create(payload).then(function (data) {
-      res.send({
-        message: "success",
-        data,
-      });
+    const data = await Cats.create(payload)
+
+    res.send({
+      message: "success",
+      data,
     });
   } catch (err) {
     console.log(err);
@@ -62,16 +58,19 @@ exports.add = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const id = req.params.id;
-    await Cats.destroy({
+    const removed = await Cats.destroy({
       where: {
         id,
       },
-    }).then(function (data) {
+    });
+
+    if (removed) {
       res.send({
         message: "success",
         id,
       });
-    });
+    }
+
   } catch (err) {
     console.log(err);
 
@@ -86,20 +85,22 @@ exports.delete = async (req, res) => {
 exports.patch = async (req, res) => {
   try {
     const id = req.params.id;
-    let updated = req.body;
-    await Cats.update(updated, {
+    let payload = req.body;
+    const updated = await Cats.update(payload, {
       where: {
         id,
       },
-    }).then(() => {
+    });
+    if (updated) {
       res.send({
         message: "success",
         data: {
           id,
-          category: updated.name,
+          category: payload.name,
         },
       });
-    });
+    }
+
   } catch (err) {
     console.log(err);
 

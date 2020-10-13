@@ -22,26 +22,23 @@ const bookQuery = {
 exports.get = async (req, res) => {
   try {
     const id = req.params.id;
-    !id
-      ? await Books.findAll(bookQuery).then(function (data) {
-        res.send({
-          message: "success",
-          data,
-        });
-      })
-      : await Books.findOne(
+    let data = null;
+
+    !id ? data = await Books.findAll(bookQuery)
+      : data = await Books.findOne(
         bookQuery,
         {
           where: {
             id,
           },
         }
-      ).then(function (data) {
-        res.send({
-          message: "success",
-          data,
-        });
-      });
+      );
+
+    res.send({
+      message: "success",
+      data,
+    });
+
   } catch (err) {
     console.log(err);
 
@@ -56,11 +53,10 @@ exports.get = async (req, res) => {
 exports.add = async (req, res) => {
   try {
     let payload = req.body;
-    await Books.create(payload).then(function (data) {
-      res.send({
-        message: "success",
-        data,
-      });
+    const data = await Books.create(payload);
+    res.send({
+      message: "success",
+      data,
     });
   } catch (err) {
     console.log(err);
@@ -76,16 +72,18 @@ exports.add = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const id = req.params.id;
-    await Books.destroy({
+    const removed = await Books.destroy({
       where: {
         id,
       },
-    }).then(function (data) {
+    });
+
+    if (removed) {
       res.send({
         message: "success",
         id,
       });
-    });
+    }
   } catch (err) {
     console.log(err);
 
@@ -100,16 +98,18 @@ exports.delete = async (req, res) => {
 exports.patch = async (req, res) => {
   try {
     const id = req.params.id;
-    let updated = req.body;
-    await Books.update(updated, {
+    let payload = req.body;
+    const updated = await Books.update(payload, {
       where: {
         id,
       },
-    }).then(() => {
+    });
+
+    if (updated) {
       res.send({
         message: "success",
       });
-    });
+    }
   } catch (err) {
     console.log(err);
 
