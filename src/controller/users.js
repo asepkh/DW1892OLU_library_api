@@ -8,23 +8,21 @@ const excluded = {
 exports.get = async (req, res) => {
   try {
     const id = req.params.id;
+    let data = null;
     !id
-      ? await Users.findAll(excluded).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        })
-      : await Users.findOne({
-          where: {
-            id,
-          },
-        }).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        });
+      ? data = await Users.findAll(excluded)
+      : data = await Users.findOne({
+        where: {
+          id,
+        },
+      });
+
+    if (data !== null) {
+      res.send({
+        message: "success",
+        data,
+      });
+    }
   } catch (err) {
     console.log(err);
 
@@ -39,16 +37,19 @@ exports.get = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const id = req.params.id;
-    await Users.destroy({
+    const deleted = await Users.destroy({
       where: {
         id,
       },
-    }).then(function (data) {
+    })
+
+    if (deleted) {
       res.send({
         message: "success",
         id,
       });
-    });
+    }
+
   } catch (err) {
     console.log(err);
 
@@ -64,11 +65,13 @@ exports.patch = async (req, res) => {
   try {
     const id = req.params.id;
     let updated = req.body;
-    await Users.update(updated, {
+    const patch = await Users.update(updated, {
       where: {
         id,
       },
-    }).then(function () {
+    })
+
+    if (patch) {
       res.send({
         message: "success",
         data: {
@@ -76,7 +79,7 @@ exports.patch = async (req, res) => {
           updated,
         },
       });
-    });
+    }
   } catch (err) {
     console.log(err);
 

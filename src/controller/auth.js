@@ -8,12 +8,39 @@ const joi = require("@hapi/joi")
 // Macros dotenv
 const jwtKey = process.env.JWT_KEY;
 
+exports.AuthCheck = async (req, res) => {
+  try {
+    const data = await Users.findOne({
+      where: {
+        id: req.user.id,
+      },
+      attributes: {
+        exclude: ["createdAt", "updatedAt", "password"],
+      },
+    });
+
+    res.send({
+      message: "user_valid",
+      data,
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).send({
+      error: {
+        message: "Server ERROR",
+      },
+    });
+  }
+};
+
 exports.signin = async (req, res) => {
   try {
     const { email, password } = req.body;
     const schema = joi.object({
       email: joi.string().email().min(10).required(),
-      password: joi.string().min(8).required(),
+      password: joi.string().min(6).required(),
     });
 
     const { error } = schema.validate(req.body);
@@ -25,43 +52,43 @@ exports.signin = async (req, res) => {
       });
     }
 
-    await Users.findOne({
+    const data = await Users.findOne({
       where: {
         email,
       },
-    }).then(function (data) {
-      if (data) {
-        const validPassword = bcrypt.compare(password, data.password);
-        if (!validPassword) {
-          return res.status(400).send({
-            error: {
-              message: "Email or password invalid",
-            },
-          });
-        }
-        const token = jwt.sign({
-          id: data.id,
-        },
-          jwtKey
-        );
+    });
 
-        res.send({
-          message: "Login Success",
-          data: {
-            email: data.email,
-            fullName: data.fullName,
-            role: data.role,
-            token,
-          },
-        });
-      } else {
+    if (data) {
+      const validPassword = bcrypt.compare(password, data.password);
+      if (!validPassword) {
         return res.status(400).send({
           error: {
-            message: "Email or password invalid",
+            message: "email_invalid",
           },
         });
       }
-    });
+      const token = jwt.sign({
+        id: data.id,
+      },
+        jwtKey
+      );
+
+      res.send({
+        message: "success",
+        data: {
+          email: data.email,
+          fullName: data.fullName,
+          role: data.role,
+          token,
+        },
+      });
+    } else {
+      return res.status(400).send({
+        error: {
+          message: "password_invalid",
+        },
+      });
+    }
   } catch (err) {
     console.log(err);
 
@@ -99,26 +126,26 @@ exports.signup = async (req, res) => {
       });
     }
 
-    await Users.findOne({
+    const checkEmail = await Users.findOne({
       where: {
         email,
       },
-    }).then(function (data) {
-      if (data) {
-        return res.status(400).send({
-          error: {
-            message: "Email already been existed",
-          },
-        });
-      }
     });
+
+    if (checkEmail) {
+      return res.status(400).send({
+        error: {
+          message: "Email already been existed",
+        },
+      });
+    }
 
     const hashedPassword = await bcrypt.hashSync(
       password,
       bcrypt.genSaltSync(10)
     );
 
-    await Users.create({
+    const data = await Users.create({
       email,
       password: hashedPassword,
       fullName,
@@ -127,15 +154,17 @@ exports.signup = async (req, res) => {
       address,
       photoUrl,
       role
-    }).then(function (result) {
+    });
+
+    if (data) {
       const token = jwt.sign(
         {
-          id: result.id,
+          id: data.id,
         },
         jwtKey
       );
 
-      res.send({
+      return res.send({
         message: "success",
         data: {
           email,
@@ -144,8 +173,8 @@ exports.signup = async (req, res) => {
           token,
         },
       });
+    }
 
-    });
   } catch (err) {
     console.log(err);
 

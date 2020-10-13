@@ -7,12 +7,14 @@ const router = express.Router();
 const {
   signin: userSignIn,
   signup: userSignUp,
+  AuthCheck: userAuthCheck,
 } = require("../controller/auth");
 
 const { authentication } = require("../middleware/auth.js");
 
 router.post("/signin", userSignIn);
 router.post("/signup", userSignUp);
+router.get("/auth", authentication, userAuthCheck);
 
 // >>>>>>>> Users And Auth <<<<<<<<<
 const {
@@ -21,7 +23,7 @@ const {
   patch: updateUser,
 } = require("../controller/users");
 
-router.get("/users", authentication, getUserData);
+router.get("/users", getUserData);
 
 router.get("/user/:id", authentication, getUserData);
 router.patch("/user/:id", authentication, updateUser);
