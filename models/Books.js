@@ -24,6 +24,13 @@ module.exports = (sequelize, DataTypes) => {
           onDelete: "CASCADE",
         },
       });
+      Books.belongsToMany(models.Users, {
+        as: "user_bookmarks",
+        through: {
+          model: "Bookmarks",
+          as: "info",
+        },
+      });
     }
   };
   Books.init({
@@ -34,6 +41,8 @@ module.exports = (sequelize, DataTypes) => {
     pages: DataTypes.INTEGER,
     isbn: DataTypes.STRING,
     aboutBook: DataTypes.STRING,
+    thumbnailUrl: DataTypes.STRING,
+    fileUrl: DataTypes.STRING,
     status: DataTypes.ENUM("Waiting to be verified", "Approved", "Canceled"),
   }, {
     sequelize,
