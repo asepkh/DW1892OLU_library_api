@@ -1,4 +1,4 @@
-const { Users } = require("../../models");
+const { Users, Books, Bookmarks } = require("../../models");
 
 // Dependencies
 const bcrypt = require("bcrypt");
@@ -8,12 +8,59 @@ const joi = require("@hapi/joi")
 // Macros dotenv
 const jwtKey = process.env.JWT_KEY;
 
+exports.AuthCheck = async (req, res) => {
+  try {
+    const data = await Users.findOne({
+      where: {
+        id: req.user.id,
+      },
+      include: {
+        model: Books,
+        as: "bookmarks_data",
+        through: {
+          model: Bookmarks,
+          as: "info",
+          attributes: {
+            include: ["id"],
+            exclude: ["createdAt", "updatedAt", "bookmarkId"],
+          },
+        },
+        include: {
+          model: Users,
+          as: "author",
+          attributes: {
+            exclude: ["createdAt", "updatedAt", "password"],
+          },
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "info", "CatId", "UserId"],
+        },
+      },
+      attributes: {
+        exclude: ["createdAt", "updatedAt", "password"],
+      },
+    });
+
+    res.send({
+      message: "user_valid",
+      data,
+    });
+
+  } catch (err) {
+    res.status(500).send({
+      error: {
+        message: "Server ERROR",
+      },
+    });
+  }
+};
+
 exports.signin = async (req, res) => {
   try {
     const { email, password } = req.body;
     const schema = joi.object({
       email: joi.string().email().min(10).required(),
-      password: joi.string().min(8).required(),
+      password: joi.string().min(6).required(),
     });
 
     const { error } = schema.validate(req.body);
@@ -25,46 +72,44 @@ exports.signin = async (req, res) => {
       });
     }
 
-    await Users.findOne({
+    const data = await Users.findOne({
       where: {
         email,
       },
-    }).then(function (data) {
-      if (data) {
-        const validPassword = bcrypt.compare(password, data.password);
-        if (!validPassword) {
-          return res.status(400).send({
-            error: {
-              message: "Email or password invalid",
-            },
-          });
-        }
-        const token = jwt.sign({
-          id: data.id,
-        },
-          jwtKey
-        );
+    });
 
-        res.send({
-          message: "Login Success",
-          data: {
-            email: data.email,
-            fullName: data.fullName,
-            role: data.role,
-            token,
-          },
-        });
-      } else {
+    if (data) {
+      const validPassword = await bcrypt.compare(password, data.password);
+      if (!validPassword) {
         return res.status(400).send({
           error: {
-            message: "Email or password invalid",
+            message: "Wrong email or password",
           },
         });
       }
-    });
-  } catch (err) {
-    console.log(err);
+      const token = jwt.sign({
+        id: data.id,
+      },
+        jwtKey
+      );
 
+      res.send({
+        message: "Login Success",
+        data: {
+          email: data.email,
+          fullName: data.fullName,
+          role: data.role,
+          token,
+        },
+      });
+    } else {
+      return res.status(400).send({
+        error: {
+          message: "Wrong email or password",
+        },
+      });
+    }
+  } catch (err) {
     res.status(500).send({
       error: {
         message: "Server ERROR",
@@ -76,7 +121,7 @@ exports.signin = async (req, res) => {
 exports.signup = async (req, res) => {
   try {
     const {
-      email, password, fullName, gender, phone, address, photoUrl, role
+      email, password, fullName, gender, phone, address, role
     } = req.body;
 
     const schema = joi.object({
@@ -86,8 +131,8 @@ exports.signup = async (req, res) => {
       gender: joi.string().valid("Male", "Female").required(),
       phone: joi.string().min(10).required(),
       address: joi.string().min(8).required(),
-      photoUrl: joi.string().min(3).uri().required(),
-      role: joi.string().valid("Guest", "Admin").required()
+      // avatar: joi.string(),
+      role: joi.string().valid("Guest", "Admin").required(),
     });
 
     const { error } = schema.validate(req.body);
@@ -99,26 +144,29 @@ exports.signup = async (req, res) => {
       });
     }
 
-    await Users.findOne({
+    const checkEmail = await Users.findOne({
       where: {
         email,
       },
-    }).then(function (data) {
-      if (data) {
-        return res.status(400).send({
-          error: {
-            message: "Email already been existed",
-          },
-        });
-      }
     });
+
+    if (checkEmail) {
+      return res.status(400).send({
+        error: {
+          message: "Email already been existed",
+        },
+      });
+    }
 
     const hashedPassword = await bcrypt.hashSync(
       password,
       bcrypt.genSaltSync(10)
     );
 
-    await Users.create({
+    const fullUrl = req.protocol + '://' + req.get('host') + "/avatar/";
+    const photoUrl = fullUrl + req.files["avatar"][0].filename;
+
+    const data = await Users.create({
       email,
       password: hashedPassword,
       fullName,
@@ -126,17 +174,20 @@ exports.signup = async (req, res) => {
       phone,
       address,
       photoUrl,
-      role
-    }).then(function (result) {
+      role,
+      bookmark: [],
+    });
+
+    if (data) {
       const token = jwt.sign(
         {
-          id: result.id,
+          id: data.id,
         },
         jwtKey
       );
 
-      res.send({
-        message: "success",
+      return res.send({
+        message: "SignUp Successfully",
         data: {
           email,
           fullName,
@@ -144,11 +195,9 @@ exports.signup = async (req, res) => {
           token,
         },
       });
+    }
 
-    });
   } catch (err) {
-    console.log(err);
-
     res.status(500).send({
       error: {
         message: "Server ERROR",

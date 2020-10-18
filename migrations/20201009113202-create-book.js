@@ -42,6 +42,15 @@ module.exports = {
       aboutBook: {
         type: Sequelize.STRING
       },
+      status: {
+        type: Sequelize.ENUM("Waiting to be verified", "Approved", "Canceled")
+      },
+      thumbnailUrl: {
+        type: Sequelize.STRING
+      },
+      fileUrl: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

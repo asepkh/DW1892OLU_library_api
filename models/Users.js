@@ -11,6 +11,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Users.hasOne(models.Books)
+      Users.belongsToMany(models.Books, {
+        as: "bookmarks_data",
+        through: {
+          model: "Bookmarks",
+          as: "info",
+        },
+      });
     }
   };
   Users.init({
@@ -21,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
     phone: DataTypes.STRING,
     address: DataTypes.STRING,
     photoUrl: DataTypes.STRING,
-    role: DataTypes.ENUM("Guest", "Admin")
+    role: DataTypes.ENUM("Guest", "Admin"),
   }, {
     sequelize,
     modelName: 'Users',

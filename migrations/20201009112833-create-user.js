@@ -18,7 +18,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       gender: {
-        type: Sequelize.STRING
+        type: Sequelize.ENUM("Male", "Female")
       },
       phone: {
         type: Sequelize.STRING
@@ -30,7 +30,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       role: {
-        type: Sequelize.ENUM("Male", "Female")
+        type: Sequelize.ENUM("Guest", "Admin")
       },
       createdAt: {
         allowNull: false,

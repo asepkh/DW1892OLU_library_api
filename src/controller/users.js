@@ -1,30 +1,61 @@
-const { Users } = require("../../models");
-const excluded = {
+const { Users, Books, Bookmarks } = require("../../models");
+const userQuery = {
+  include: {
+    model: Books,
+    as: "bookmarks_data",
+    through: {
+      model: Bookmarks,
+      as: "info",
+    },
+  },
   attributes: {
-    exclude: ["createdAt", "updatedAt"],
+    exclude: ["createdAt", "updatedAt", "password"],
   },
 };
 
 exports.get = async (req, res) => {
   try {
     const id = req.params.id;
+    let data = null;
     !id
-      ? await Users.findAll(excluded).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        })
-      : await Users.findOne({
-          where: {
-            id,
+      ? data = await Users.findAll(userQuery)
+      : data = await Users.findOne({
+        where: {
+          id,
+        },
+        include: {
+          model: Books,
+          as: "bookmarks_data",
+          through: {
+            model: Bookmarks,
+            as: "info",
+            attributes: {
+              include: ["id"],
+              exclude: ["createdAt", "updatedAt", "bookmarkId"],
+            },
           },
-        }).then(function (data) {
-          res.send({
-            message: "success",
-            data,
-          });
-        });
+          include: {
+            model: Users,
+            as: "author",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "password"],
+            },
+          },
+          attributes: {
+            exclude: ["createdAt", "updatedAt", "info", "CatId", "UserId"],
+          },
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "password"],
+        },
+      });
+
+    if (data !== null) {
+      res.send({
+        message: "Response Successfully",
+        data,
+      });
+    }
   } catch (err) {
     console.log(err);
 
@@ -39,16 +70,52 @@ exports.get = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const id = req.params.id;
-    await Users.destroy({
+    const deleted = await Users.destroy({
       where: {
         id,
       },
-    }).then(function (data) {
+    })
+
+    if (deleted) {
       res.send({
-        message: "success",
+        message: "Successfully Deleted",
         id,
       });
+    }
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).send({
+      error: {
+        message: "Server ERROR",
+      },
     });
+  }
+};
+
+exports.patch_avatar = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const fullUrl = req.protocol + '://' + req.get('host') + "/avatar/";
+    const photoUrl = fullUrl + req.files["avatar"][0].filename;
+
+    const patch = await Users.update({ photoUrl }, {
+      where: {
+        id,
+      },
+    })
+
+    if (patch) {
+      res.send({
+        message: "Successfully change photo profile",
+        data: {
+          id,
+          photoUrl,
+        },
+      });
+    }
   } catch (err) {
     console.log(err);
 
@@ -64,19 +131,22 @@ exports.patch = async (req, res) => {
   try {
     const id = req.params.id;
     let updated = req.body;
-    await Users.update(updated, {
+
+    const patch = await Users.update(updated, {
       where: {
         id,
       },
-    }).then(function () {
+    })
+
+    if (patch) {
       res.send({
-        message: "success",
+        message: "Successfully Updated",
         data: {
           id,
           updated,
         },
       });
-    });
+    }
   } catch (err) {
     console.log(err);
 
