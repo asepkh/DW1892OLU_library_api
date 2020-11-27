@@ -69,6 +69,13 @@ exports.get = async (req, res) => {
             id,
           },
           include: {
+            model: Cats,
+            as: "category",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "password"],
+            },
+          },
+          include: {
             model: Users,
             as: "author",
             attributes: {
