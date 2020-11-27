@@ -120,7 +120,6 @@ exports.patch_avatar = async (req, res) => {
       res.send({
         message: "Successfully change photo profile",
         data: {
-          id,
           photoUrl,
         },
       });
