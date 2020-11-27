@@ -2,12 +2,19 @@ const { Bookmarks } = require("../../models");
 
 exports.add = async (req, res) => {
   try {
-    let payload = req.body;
-    const data = await Bookmarks.create(payload);
-    res.send({
-      message: "This book has been added to your library",
-      data,
+    const { BookId } = req.body;
+    const data = await Bookmarks.create({
+      where: {
+        UserId: req.user.id,
+        BookId,
+      },
     });
+    if (data) {
+      res.send({
+        message: "This book has been added to your library",
+        data,
+      });
+    }
   } catch (err) {
     console.log(err);
 

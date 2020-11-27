@@ -29,7 +29,7 @@ router.get("/users", [authentication.authorization], getUserData);
 router.get("/user/:id", [authentication.authorization], getUserData);
 router.patch("/user/:id", [authentication.authorization], updateUser);
 router.patch(
-  "/user/avatar/:id",
+  "/user/avatar",
   [
     authentication.authorization,
     authentication.files_upload([{ name: "avatar", maxCount: 1 }]),
@@ -85,7 +85,7 @@ const {
 } = require("../controller/bookmarks");
 router.post("/bookmark", [authentication.authorization], addBookmark);
 router.delete(
-  "/bookmark/:UserId/:BookId",
+  "/bookmark/:BookId",
   [authentication.authorization],
   deleteBookmark
 );
