@@ -22,37 +22,37 @@ exports.get = async (req, res) => {
     const id = req.params.id;
     let data = null;
     !id
-      ? data = await Users.findAll(userQuery)
-      : data = await Users.findOne({
-        where: {
-          id,
-        },
-        include: {
-          model: Books,
-          as: "bookmarks_data",
-          through: {
-            model: Bookmarks,
-            as: "info",
-            attributes: {
-              include: ["id"],
-              exclude: ["createdAt", "updatedAt"],
-            },
+      ? (data = await Users.findAll(userQuery))
+      : (data = await Users.findOne({
+          where: {
+            id,
           },
           include: {
-            model: Users,
-            as: "author",
+            model: Books,
+            as: "bookmarks_data",
+            through: {
+              model: Bookmarks,
+              as: "info",
+              attributes: {
+                include: ["id"],
+                exclude: ["createdAt", "updatedAt"],
+              },
+            },
+            include: {
+              model: Users,
+              as: "author",
+              attributes: {
+                exclude: ["createdAt", "updatedAt", "password"],
+              },
+            },
             attributes: {
-              exclude: ["createdAt", "updatedAt", "password"],
+              exclude: ["createdAt", "updatedAt", "info", "CatId", "UserId"],
             },
           },
           attributes: {
-            exclude: ["createdAt", "updatedAt", "info", "CatId", "UserId"],
+            exclude: ["createdAt", "updatedAt", "password"],
           },
-        },
-        attributes: {
-          exclude: ["createdAt", "updatedAt", "password"],
-        },
-      });
+        }));
 
     if (data !== null) {
       res.send({
@@ -84,7 +84,7 @@ exports.delete = async (req, res) => {
       where: {
         id,
       },
-    })
+    });
 
     if (deleted) {
       res.send({
@@ -92,7 +92,6 @@ exports.delete = async (req, res) => {
         id,
       });
     }
-
   } catch (err) {
     console.log(err);
 
@@ -108,14 +107,16 @@ exports.patch_avatar = async (req, res) => {
   try {
     const id = req.params.id;
 
-    const fullUrl = req.protocol + '://' + req.get('host') + "/avatar/";
-    const photoUrl = fullUrl + req.files["avatar"][0].filename;
+    const photoUrl = req.files["avatar"][0].path;
 
-    const patch = await Users.update({ photoUrl }, {
-      where: {
-        id,
-      },
-    })
+    const patch = await Users.update(
+      { photoUrl },
+      {
+        where: {
+          id,
+        },
+      }
+    );
 
     if (patch) {
       res.send({
@@ -146,7 +147,7 @@ exports.patch = async (req, res) => {
       where: {
         id,
       },
-    })
+    });
 
     if (patch) {
       res.send({
