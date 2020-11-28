@@ -37,7 +37,7 @@ exports.delete = async (req, res) => {
     if (removed) {
       res.send({
         message: "This book has been removed from your library",
-        UserId,
+        UserId: req.user.id,
         BookId,
       });
     }
