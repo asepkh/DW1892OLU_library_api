@@ -4,10 +4,8 @@ exports.add = async (req, res) => {
   try {
     const { BookId } = req.body;
     const data = await Bookmarks.create({
-      where: {
-        UserId: req.user.id,
-        BookId,
-      },
+      UserId: req.user.id,
+      BookId,
     });
     if (data) {
       res.send({

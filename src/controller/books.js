@@ -37,7 +37,7 @@ exports.get = async (req, res) => {
             status: status,
           },
           category && {
-            category: category,
+            CatId: category,
           },
         ],
       },
